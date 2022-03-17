@@ -1,8 +1,8 @@
 # books-api-golang
-An adaptation of the (Golang API/Lambda Tutorial written by Alex Edwards)[https://www.alexedwards.net/blog/serverless-api-with-go-and-aws-lambda]
+An adaptation of the [Golang API/Lambda Tutorial written by Alex Edwards](https://www.alexedwards.net/blog/serverless-api-with-go-and-aws-lambda)
 
 ## Changes
-You can follow the link to Alex's blog article, but I made several changes to the code to accommodate my goals. Most of this directly relates to using the HTTP Gateway, aka APIGATEWAYV2. You can find the relevant structs in the (AWS Github Repo).[https://github.com/aws/aws-lambda-go/blob/0462b0000e7468bdc8a9c456273c1551fab284aa/events/apigw.go#L123]
+You can follow the link to Alex's blog article, but I made several changes to the code to accommodate my goals. Most of this directly relates to using the HTTP Gateway, aka APIGATEWAYV2. You can find the relevant structs in the [AWS Github Repo.](https://github.com/aws/aws-lambda-go/blob/0462b0000e7468bdc8a9c456273c1551fab284aa/events/apigw.go#L123)
 
 To save some guesswork on your part, I updated the ProxyRequest and ProxyResponse to instead use APIGatewayV2HTTPRequest and APIGatewayV2HTTPResponse. Alex's blog uses a query param for the GET /books route, but I am more interested in the pure API functionality so I changed the usage of accessing the QueryStringParameters from APIGW Request to instead process the query as JSON input.
 
