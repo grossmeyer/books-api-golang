@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -36,16 +38,16 @@ func getItem(pk, sk string) (*Book, error) {
 	}
 
 	// result.Item must be formatted back to our Book struct
-	book := new(Book)
-	err = dynamodbattribute.UnmarshalMap(result.Item, book)
+	bookRes := new(Book)
+	err = dynamodbattribute.UnmarshalMap(result.Item, bookRes)
 	if err != nil {
 		return nil, err
 	}
 
-	return book, nil
+	return bookRes, nil
 }
 
-func putItem(book *Book) error {
+func putItem(book *Book) (*Book, error) {
 	input := &dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item: map[string]*dynamodb.AttributeValue{
@@ -59,13 +61,17 @@ func putItem(book *Book) error {
 				S: aws.String(book.Title),
 			},
 			"itemCount": {
-				N: aws.String("1"),
+				N: aws.String(fmt.Sprint(book.ItemCount)),
 			},
 		},
 	}
 
 	_, err := db.PutItem(input)
-	return err
+	if err != nil {
+		return nil, err
+	}
+
+	return book, nil
 }
 
 func incrementItem(pk, sk string) (*Book, error) {
@@ -96,11 +102,11 @@ func incrementItem(pk, sk string) (*Book, error) {
 	}
 
 	// result.Item must be formatted back to our Book struct
-	book := new(Book)
-	err = dynamodbattribute.UnmarshalMap(result.Attributes, book)
+	bookRes := new(Book)
+	err = dynamodbattribute.UnmarshalMap(result.Attributes, bookRes)
 	if err != nil {
 		return nil, err
 	}
 
-	return book, nil
+	return bookRes, nil
 }

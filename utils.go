@@ -52,11 +52,7 @@ func validateIsbnFormat(isbn string) bool {
 
 // Returns true is field is not blank
 func validateFieldLength(field string) bool {
-	if field == "" {
-		return false
-	}
-
-	return true
+	return field != ""
 }
 
 // Returns false if any validation fails

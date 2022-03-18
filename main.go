@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -81,16 +80,21 @@ func create(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse
 		return clientError(http.StatusBadRequest)
 	}
 
-	// putItem returns an error (normally will be nil)
-	err = putItem(bookReq)
+	// putItem returns new Book or err
+	bookRes, err := putItem(bookReq)
+	if err != nil {
+		return serverError(err)
+	}
+
+	// APIGateway Body needs to be JSON, so we convert here
+	js, err := json.Marshal(bookRes)
 	if err != nil {
 		return serverError(err)
 	}
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: 201,
-		Headers:    map[string]string{"Location": fmt.Sprintf("/books?pk=%s&sk=%s", bookReq.ISBN, bookReq.Author)},
-		Body:       req.Body,
+		Body:       string(js),
 	}, nil
 }
 
