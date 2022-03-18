@@ -12,6 +12,6 @@ Another notable breaking change between the REST Gateway (v1) and the HTTP Gatew
 
 Alex's blog only writes handlers for the GET and POST actions; I added a third action for PATCH. The PATCH handler in this case simply increments the itemCount by 1. Speaking of itemCount, fun fact, don't create a DynamoDB field called merely "count", as apparently that is a protected keyword. I ran into some inconsistent behavior that I finally tracked down by using the awscli tool to determine that my UpdateExpression was trying to modify fields that were named the same as the protected keyword.
 
-Other changes I made were to use rewrite the DynamoDB session initialization by following the pattern in the [AWS SDK.](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-dynamodb-with-go-sdk.html)
+Other changes I made were to rewrite the DynamoDB session initialization by following the pattern in the [AWS SDK.](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/using-dynamodb-with-go-sdk.html)
 
-Finally, I refactored out some of the helper functions Alex wrote in main.go to instead be stored in utils.go, which I find handy since it keeps main.go focused being a method handler.
+Finally, I refactored out some of the helper functions Alex wrote in main.go to instead be stored in utils.go, which I find handy since it keeps main.go focused being a method handler. The validation functions that appear in the handlers I also moved here to keep the handlers themselves to look neat and tidy.
