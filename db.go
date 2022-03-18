@@ -26,7 +26,7 @@ func getItem(pk, sk string) (*Book, error) {
 		},
 	}
 
-	// Get item if found or return
+	// Get item if found or return if empty
 	result, err := db.GetItem(input)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func getItem(pk, sk string) (*Book, error) {
 		return nil, nil
 	}
 
-	// result.Item must be formatted back into something we can use
+	// result.Item must be formatted back to our Book struct
 	book := new(Book)
 	err = dynamodbattribute.UnmarshalMap(result.Item, book)
 	if err != nil {
@@ -58,7 +58,7 @@ func putItem(book *Book) error {
 			"title": {
 				S: aws.String(book.Title),
 			},
-			"count": {
+			"itemCount": {
 				N: aws.String("1"),
 			},
 		},
@@ -66,4 +66,41 @@ func putItem(book *Book) error {
 
 	_, err := db.PutItem(input)
 	return err
+}
+
+func incrementItem(pk, sk string) (*Book, error) {
+	// Input for dynamoDB query must be formatted
+	input := &dynamodb.UpdateItemInput{
+		TableName: aws.String(tableName),
+		Key: map[string]*dynamodb.AttributeValue{
+			"pk": {
+				S: aws.String(pk),
+			},
+			"sk": {
+				S: aws.String(sk),
+			},
+		},
+		ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+			":inc": {
+				N: aws.String("1"),
+			},
+		},
+		UpdateExpression: aws.String("set itemCount = itemCount + :inc"),
+		ReturnValues:     aws.String("ALL_NEW"),
+	}
+
+	// Process update and return updated Book
+	result, err := db.UpdateItem(input)
+	if err != nil {
+		return nil, err
+	}
+
+	// result.Item must be formatted back to our Book struct
+	book := new(Book)
+	err = dynamodbattribute.UnmarshalMap(result.Attributes, book)
+	if err != nil {
+		return nil, err
+	}
+
+	return book, nil
 }

@@ -28,3 +28,11 @@ func clientError(status int) (events.APIGatewayV2HTTPResponse, error) {
 		Body:       http.StatusText(status),
 	}, nil
 }
+
+// Returns true if formatted correctly
+func checkJsonFormat(req events.APIGatewayV2HTTPRequest) bool {
+	if req.Headers["content-type"] != "application/json" && req.Headers["Content-Type"] != "application/json" {
+		return false
+	}
+	return true
+}
