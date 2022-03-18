@@ -31,27 +31,19 @@ func router(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse
 
 // GET request must use pk,sk as JSON
 func show(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	// Use unmarshal to map JSON to book struct
-	bookReq := new(Book)
-	err := json.Unmarshal([]byte(req.Body), bookReq)
+	// Unmarshal Request JSON to Book struct
+	bookReq, err := unmarshalBookJson(req)
 	if err != nil {
 		return clientError(http.StatusUnprocessableEntity)
 	}
 
-	// Get the ISBN from the pk param and validate
-	pk := bookReq.ISBN
-	if !isbnRegexp.MatchString(pk) {
-		return clientError(http.StatusBadRequest)
-	}
-
-	// Get the Author from the sk param
-	sk := bookReq.Author
-	if sk == "" {
+	// Validate Request, see utils for details
+	if !validateReadRequest(bookReq.ISBN, bookReq.Author) {
 		return clientError(http.StatusBadRequest)
 	}
 
 	// Get the book response from DynamoDB based on the pk,sk pair
-	bookRes, err := getItem(pk, sk)
+	bookRes, err := getItem(bookReq.ISBN, bookReq.Author)
 	if err != nil {
 		return serverError(err)
 	}
@@ -73,61 +65,50 @@ func show(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, 
 
 // POST request must use Book fields as JSON
 func create(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	if !checkJsonFormat(req) {
+	// Validate header content-type is JSON
+	if !validateJsonFormat(req) {
 		return clientError(http.StatusNotAcceptable)
 	}
 
-	// Use unmarshal to map JSON to book struct
-	book := new(Book)
-	err := json.Unmarshal([]byte(req.Body), book)
+	// Unmarshal Request JSON to Book struct
+	bookReq, err := unmarshalBookJson(req)
 	if err != nil {
 		return clientError(http.StatusUnprocessableEntity)
 	}
 
-	// Validate input data
-	if !isbnRegexp.MatchString(book.ISBN) {
-		return clientError(http.StatusBadRequest)
-	}
-	if book.Title == "" || book.Author == "" {
+	// Validate Request, see utils for details
+	if !validateWriteRequest(bookReq.ISBN, bookReq.Author, bookReq.Title) {
 		return clientError(http.StatusBadRequest)
 	}
 
 	// putItem returns an error (normally will be nil)
-	err = putItem(book)
+	err = putItem(bookReq)
 	if err != nil {
 		return serverError(err)
 	}
 
 	return events.APIGatewayV2HTTPResponse{
 		StatusCode: 201,
-		Headers:    map[string]string{"Location": fmt.Sprintf("/books?pk=%s&sk=%s", book.ISBN, book.Author)},
+		Headers:    map[string]string{"Location": fmt.Sprintf("/books?pk=%s&sk=%s", bookReq.ISBN, bookReq.Author)},
 		Body:       req.Body,
 	}, nil
 }
 
 // PATCH request must use Book fields as JSON
 func update(req events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
-	// Use unmarshal to map JSON to book struct
-	bookReq := new(Book)
-	err := json.Unmarshal([]byte(req.Body), bookReq)
+	// Unmarshal Request JSON to Book struct
+	bookReq, err := unmarshalBookJson(req)
 	if err != nil {
 		return clientError(http.StatusUnprocessableEntity)
 	}
 
-	// Get the ISBN from the pk param and validate
-	pk := bookReq.ISBN
-	if !isbnRegexp.MatchString(pk) {
-		return clientError(http.StatusBadRequest)
-	}
-
-	// Get the Author from the sk param
-	sk := bookReq.Author
-	if sk == "" {
+	// Validate Request, see utils for details
+	if !validateReadRequest(bookReq.ISBN, bookReq.Author) {
 		return clientError(http.StatusBadRequest)
 	}
 
 	// Get the book response from DynamoDB based on the pk,sk pair
-	bookRes, err := incrementItem(pk, sk)
+	bookRes, err := incrementItem(bookReq.ISBN, bookReq.Author)
 	if err != nil {
 		return serverError(err)
 	}
